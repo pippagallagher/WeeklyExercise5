@@ -130,9 +130,6 @@ small_trains %>%
         panel.grid.major.y = element_blank(),
         panel.grid.minor.y = element_blank()) +
    transition_time(month) 
-```
-
-```{r}
 anim_save("smalltrains.gif")
 ```
 
@@ -166,8 +163,6 @@ garden_harvest %>%
        x = "",
        y =  "") +
   transition_reveal(date)
-```
-```{r}
 anim_save("tomatoes.gif")
 ```
 
@@ -213,9 +208,7 @@ ggmap(mallorca_map) +
              aes(x = lon, y = lat, label = speed), color = "red",
              size = 3)
 animate(mallorca_anim, duration = 30)
-```
 
-```{r}
 anim_save("mallorca.gif")
 ```
 
@@ -251,9 +244,6 @@ ggmap(panama_map) +
   theme(legend.background = element_blank()) +
   transition_reveal(time)
   
-```
-
-```{r}
 anim_save("panama.gif")
 ```
 
@@ -279,7 +269,7 @@ covid19_animation <-
   group_by(state) %>% 
   mutate(new_cases = (cases - lag(cases,7)),
          new_cases = replace_na(new_cases,0),
-         case_count = cumsum(cases)) %>% 
+         case_count = cases)) %>% 
   filter(case_count >= 20) %>%
   arrange(state) %>% 
   ggplot() +
@@ -297,9 +287,6 @@ covid19_animation <-
 
   animate(covid19_animation, nframes = 200, duration = 30)
   
-```
-  
-```{r}
 anim_save("covid19.gif")
 ```
 
@@ -314,6 +301,7 @@ knitr::include_graphics("covid19.gif")
   * Use `group = date` in `aes()`.   
   * Comment on what you see.  
 
+The states progress together with North and South Dakota standing out to me as the brightest. States that you might assume would stand out, such as California and New York, move with all the other states and do not show any signs of having the most cases per 10,000.
 
 ```{r}
 census_pop_est_2018 <- read_csv("https://www.dropbox.com/s/6txwv3b4ng7pepe/us_census_2018_state_pop_est.csv?dl=1") %>% 
@@ -327,27 +315,26 @@ states_map <- map_data("state")
 ```{r, eval=FALSE}
 covid19_map_anim <-
 covid19 %>% 
-  group_by(state) %>% 
-  summarise(cases = max(cases),
-            state = str_to_lower(state),
+  mutate(state = str_to_lower(state)) %>% 
+  left_join(census_pop_est_2018, by = c("state" = "state")) %>% 
+  mutate(cases_per_10000 = (cases/est_pop_2018) *10000,
          weekday = wday(date)) %>% 
   filter(weekday == "5") %>% 
   ggplot() +
   geom_map(map = states_map,
            aes(map_id = state,
-               fill = cases, group = state)) +
+               fill = cases_per_10000, group = date)) +
   expand_limits(x = states_map$long, y = states_map$lat) +
   theme_map() +
   labs(title = "Cumulative Number of COVID-19 Cases in US",
-       subtitle = "Date: ") +
+       subtitle = "Date: {closest_state}") +
   transition_states(date)
   
   animate(covid19_map_anim, nframes = 200, end_pause = 10)
+  
+  anim_save("covid19map.gif")
 ```
 
-```{r}
-anim_save("covid19map.gif")
-```
 
 ```{r}
 knitr::include_graphics("covid19map.gif")
