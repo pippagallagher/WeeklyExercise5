@@ -35,6 +35,7 @@ library(transformr)    # for "tweening" (gganimate)
 library(gifski)        # need the library for creating gifs but don't need to load each time
 library(shiny) # for creating interactive apps
 theme_set(theme_minimal())
+library(ggimage)
 ```
 
 ```{r data}
@@ -190,6 +191,9 @@ mallorca_map <- get_stamenmap(
     maptype = "terrain",
     zoom = 11
 )
+
+img <- "https://raw.githubusercontent.com/llendway/animation_and_interactivity/master/bike.png"
+
 mallorca_anim <-
 ggmap(mallorca_map) +
   geom_path(data = mallorca_bike_day7, 
@@ -206,7 +210,11 @@ ggmap(mallorca_map) +
              size = 1.5) +
   geom_text(data = mallorca_bike_day7, 
              aes(x = lon, y = lat, label = speed), color = "red",
-             size = 3)
+             size = 3) 
+  #geom_image(data = mallorca_bike_day7 %>% mutate(image = img), 
+             #aes(x = lon, y = lat, image = image),
+             #size = 0.05)
+
 animate(mallorca_anim, duration = 30)
 
 anim_save("mallorca.gif")
@@ -232,14 +240,13 @@ panama_map <- get_stamenmap(
 
 ggmap(panama_map) +
   geom_path(data = full_panama, 
-             aes(x = lon, y = lat, color = ele),
+             aes(x = lon, y = lat, color = event),
              size = .5) +
   geom_point(data = full_panama,
-             aes(x = lon, y = lat),
-             size = .5) +
+             aes(x = lon, y = lat, color = event),
+             size = .9) +
   labs(title = "Panama Ironman",
     subtitle = "Time: {frame_along}") +
-  scale_color_viridis_c(option = "magma") +
   theme_map() +
   theme(legend.background = element_blank()) +
   transition_reveal(time)
